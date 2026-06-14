@@ -9,7 +9,7 @@ const ListingDetail = () => {
   const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('Hi, I\'m interested in this property. Is it still available?');
   const [inquirySent, setInquirySent] = useState(false);
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
@@ -52,38 +52,40 @@ const ListingDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
         <button onClick={() => navigate('/listings')} className="text-sm text-gray-500 hover:text-blue-600 mb-6 flex items-center gap-1 transition">
-          Back to Listings
+          ← Back to Listings
         </button>
 
-        <div className="grid grid-cols-3 gap-8">
-          <div className="col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Left — images + details */}
+          <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
               <img
                 src={images[activeImg]}
                 alt={listing.title}
-                className="w-full h-80 object-cover"
+                className="w-full h-64 md:h-80 object-cover"
               />
               {images.length > 1 && (
-                <div className="flex gap-2 p-3">
+                <div className="flex gap-2 p-3 overflow-x-auto">
                   {images.map((img, i) => (
                     <img
                       key={i}
                       src={img}
                       alt=""
                       onClick={() => setActiveImg(i)}
-                      className={"w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition " + (activeImg === i ? 'border-blue-500' : 'border-transparent')}
+                      className={"w-16 h-16 flex-shrink-0 object-cover rounded-lg cursor-pointer border-2 transition " + (activeImg === i ? 'border-blue-500' : 'border-transparent')}
                     />
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex gap-2 mb-2">
+            <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                <div className="flex-1">
+                  <div className="flex gap-2 mb-2 flex-wrap">
                     <span className="bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full">{listing.type}</span>
                     <span className={"text-xs font-semibold px-3 py-1 rounded-full " + (
                       listing.gender === 'male' ? 'bg-blue-50 text-blue-600' :
@@ -92,11 +94,11 @@ const ListingDetail = () => {
                     )}>{listing.gender}</span>
                     <span className="bg-gray-50 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">{listing.furnishing}</span>
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-800">{listing.title}</h1>
-                  <p className="text-gray-500 mt-1">{listing.address?.street}, {listing.address?.city}, {listing.address?.state} — {listing.address?.pincode}</p>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-800">{listing.title}</h1>
+                  <p className="text-gray-500 mt-1 text-sm">{listing.address?.street}, {listing.address?.city}, {listing.address?.state} — {listing.address?.pincode}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-blue-600">Rs {listing.rent?.toLocaleString()}</p>
+                <div className="sm:text-right">
+                  <p className="text-2xl md:text-3xl font-bold text-blue-600">Rs {listing.rent?.toLocaleString()}</p>
                   <p className="text-gray-400 text-sm">/month</p>
                 </div>
               </div>
@@ -127,11 +129,12 @@ const ListingDetail = () => {
             </div>
           </div>
 
+          {/* Right — owner + inquiry */}
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
               <h3 className="font-semibold text-gray-800 mb-4">Listed by</h3>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg flex-shrink-0">
                   {listing.owner?.name?.[0]}
                 </div>
                 <div>
@@ -140,28 +143,26 @@ const ListingDetail = () => {
                 </div>
               </div>
               {listing.owner?.phone && (
-                <a
-                href={`tel:${listing.owner.phone}`}
-                className="w-full block text-center bg-green-50 text-green-600 font-medium py-3 rounded-xl hover:bg-green-100 transition text-sm"
+                
+                  href={`tel:${listing.owner.phone}`}
+                  className="w-full block text-center bg-green-50 text-green-600 font-medium py-3 rounded-xl hover:bg-green-100 transition text-sm"
                 >
-                  Call Owner
-                  </a>
-                )}
-              
+                  📞 Call Owner
+                </a>
+              )}
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm">
               <h3 className="font-semibold text-gray-800 mb-4">Send Inquiry</h3>
               {inquirySent ? (
                 <div className="bg-green-50 text-green-600 text-sm px-4 py-3 rounded-xl text-center">
-                  Inquiry sent successfully! Owner will contact you soon.
+                  Inquiry sent! Owner will contact you soon.
                 </div>
               ) : (
                 <>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Hi, I'm interested in this property. Is it still available?"
                     rows={4}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition resize-none mb-3"
                   />
@@ -177,7 +178,7 @@ const ListingDetail = () => {
             </div>
 
             <div className={"rounded-2xl p-4 text-center text-sm font-medium " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
-              {listing.isAvailable ? 'Available Now' : 'Not Available'}
+              {listing.isAvailable ? '✓ Available Now' : '✗ Not Available'}
             </div>
           </div>
         </div>
