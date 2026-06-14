@@ -11,6 +11,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('listings');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', type: 'PG', gender: 'any',
     rent: '', deposit: '', furnishing: 'unfurnished',
@@ -38,15 +40,34 @@ const Dashboard = () => {
 
   const fetchInquiries = async (listingId) => {
     try {
-      const { data } = await API.get(`/inquiries/listing/${listingId}`);
+      const { data } = await API.get('/inquiries/listing/' + listingId);
       setInquiries(data);
     } catch (err) {
       console.error(err);
     }
   };
 
+  const uploadImages = async () => {
+    if (imageFiles.length === 0) return [];
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      imageFiles.forEach((file) => formData.append('images', file));
+      const { data } = await API.post('/listings/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return data.urls;
+    } catch (err) {
+      console.error(err);
+      return [];
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleCreate = async () => {
     try {
+      const imageUrls = await uploadImages();
       await API.post('/listings', {
         title: form.title,
         description: form.description,
@@ -57,8 +78,10 @@ const Dashboard = () => {
         furnishing: form.furnishing,
         address: { street: form.street, city: form.city, state: form.state, pincode: form.pincode },
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
+        images: imageUrls,
       });
       setShowForm(false);
+      setImageFiles([]);
       setForm({ title: '', description: '', type: 'PG', gender: 'any', rent: '', deposit: '', furnishing: 'unfurnished', city: '', state: '', street: '', pincode: '', amenities: '' });
       fetchData();
     } catch (err) {
@@ -69,7 +92,7 @@ const Dashboard = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this listing?')) return;
     try {
-      await API.delete(`/listings/${id}`);
+      await API.delete('/listings/' + id);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -184,12 +207,26 @@ const Dashboard = () => {
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
                   placeholder="WiFi, AC, Meals, Laundry" />
               </div>
+              <div className="col-span-2">
+                <label className="text-sm font-medium text-gray-700 block mb-1">Images (max 5)</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => setImageFiles(Array.from(e.target.files))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition"
+                />
+                {imageFiles.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1">{imageFiles.length} image(s) selected</p>
+                )}
+              </div>
             </div>
             <button
               onClick={handleCreate}
-              className="mt-5 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm"
+              disabled={uploading}
+              className="mt-5 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
             >
-              Create Listing
+              {uploading ? 'Uploading images...' : 'Create Listing'}
             </button>
           </div>
         )}
@@ -235,7 +272,7 @@ const Dashboard = () => {
                     <td className="px-5 py-4 text-sm text-blue-600 font-medium">Rs {listing.rent?.toLocaleString()}</td>
                     <td className="px-5 py-4 text-sm text-gray-500">{listing.type}</td>
                     <td className="px-5 py-4">
-                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                      <span className={"text-xs font-medium px-3 py-1 rounded-full " + (listing.isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500')}>
                         {listing.isAvailable ? 'Available' : 'Unavailable'}
                       </span>
                     </td>
@@ -275,11 +312,11 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500 mt-1">{inq.message}</p>
                       <p className="text-xs text-gray-400 mt-1">{inq.tenant?.email} · {inq.tenant?.phone}</p>
                     </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                    <span className={"text-xs font-medium px-3 py-1 rounded-full " + (
                       inq.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :
                       inq.status === 'responded' ? 'bg-green-50 text-green-600' :
                       'bg-gray-50 text-gray-500'
-                    }`}>
+                    )}>
                       {inq.status}
                     </span>
                   </div>
